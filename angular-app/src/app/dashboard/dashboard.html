@@ -1,0 +1,149 @@
+<div class="dashboard-page">
+
+  <div class="page-header">
+
+    <div>
+      <h1>Dashboard</h1>
+      <p>Welcome back to ClassTrack</p>
+    </div>
+
+    <div class="header-badge">
+      Tuition Management
+    </div>
+
+  </div>
+
+  <div class="stats-grid">
+
+    <div class="stat-card">
+
+      <div class="stat-icon blue">
+        👨‍🎓
+      </div>
+
+      <div class="stat-content">
+        <span>Total Students</span>
+        <strong>{{ totalStudents }}</strong>
+      </div>
+
+    </div>
+
+    <div class="stat-card">
+
+      <div class="stat-icon green">
+        👨‍🏫
+      </div>
+
+      <div class="stat-content">
+        <span>Total Teachers</span>
+        <strong>{{ totalTeacher }}</strong>
+      </div>
+
+    </div>
+
+    <div class="stat-card">
+
+      <div class="stat-icon orange">
+        ✓
+      </div>
+
+      <div class="stat-content">
+        <span>Present Today</span>
+        <strong>{{ presentToday }}</strong>
+      </div>
+
+    </div>
+
+    <div class="stat-card">
+
+      <div class="stat-icon red">
+        ₹
+      </div>
+
+      <div class="stat-content">
+        <span>Fees Collected</span>
+        <strong>₹{{ feesCollected }}</strong>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="dashboard-section">
+
+    <div class="section-header">
+
+      <div>
+        <h2>Quick Access</h2>
+        <p>Manage your tuition activities</p>
+      </div>
+
+    </div>
+
+    <div class="quick-grid">
+
+      <a routerLink="/students" class="quick-card">
+
+        <div class="quick-icon blue">
+          👨‍🎓
+        </div>
+
+        <div>
+          <h3>Students</h3>
+          <p>Manage student details</p>
+        </div>
+
+        <span class="arrow">→</span>
+
+      </a>
+
+      <a routerLink="/teacher" class="quick-card">
+
+        <div class="quick-icon green">
+          👨‍🏫
+        </div>
+
+        <div>
+          <h3>Teachers</h3>
+          <p>Manage teacher details</p>
+        </div>
+
+        <span class="arrow">→</span>
+
+      </a>
+
+      <a routerLink="/attendance" class="quick-card">
+
+        <div class="quick-icon orange">
+          ✓
+        </div>
+
+        <div>
+          <h3>Attendance</h3>
+          <p>Track student attendance</p>
+        </div>
+
+        <span class="arrow">→</span>
+
+      </a>
+
+      <a routerLink="/fee" class="quick-card">
+
+        <div class="quick-icon red">
+          ₹
+        </div>
+
+        <div>
+          <h3>Fees</h3>
+          <p>Manage fee payments</p>
+        </div>
+
+        <span class="arrow">→</span>
+
+      </a>
+
+    </div>
+
+  </div>
+
+</div>

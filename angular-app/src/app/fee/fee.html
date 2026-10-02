@@ -1,0 +1,238 @@
+<div class="fee-page">
+
+  <div class="page-header">
+
+    <div>
+      <h1>Fees</h1>
+      <p>Manage student fee payments and records</p>
+    </div>
+
+    <div class="fee-count">
+      {{ feeList.length }} Records
+    </div>
+
+  </div>
+
+  <div class="fee-form-card">
+
+    <div class="section-title">
+
+      <div>
+        <h2>
+          {{ editingFeeId !== null ? 'Update Fee' : 'Add Fee Payment' }}
+        </h2>
+
+        <p>
+          Enter the payment details below
+        </p>
+      </div>
+
+    </div>
+
+    <div class="form-grid">
+
+      <div class="form-group">
+
+        <label>Student</label>
+
+        <select [(ngModel)]="studentId">
+
+          <option [ngValue]="0">
+            Select Student
+          </option>
+
+          @for (student of students; track student.id) {
+
+            <option [ngValue]="student.id">
+              {{ student.studentName }}
+            </option>
+
+          }
+
+        </select>
+
+      </div>
+
+      <div class="form-group">
+
+        <label>Amount</label>
+
+        <input
+          type="number"
+          [(ngModel)]="amount"
+          placeholder="Enter fee amount">
+
+      </div>
+
+      <div class="form-group">
+
+        <label>Payment Date</label>
+
+        <input
+          type="date"
+          [(ngModel)]="paymentDate">
+
+      </div>
+
+      <div class="form-group">
+
+        <label>Payment Status</label>
+
+        <select [(ngModel)]="paymentStatus">
+
+          <option value="">
+            Select Status
+          </option>
+
+          <option value="Paid">
+            Paid
+          </option>
+
+          <option value="Pending">
+            Pending
+          </option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+    <div class="form-actions">
+
+      <button
+        type="button"
+        class="primary-button"
+        [disabled]="studentId === 0 || amount <= 0 || !paymentDate || !paymentStatus"
+        (click)="addFee()">
+
+        {{ editingFeeId !== null ? 'Update Fee' : 'Add Fee' }}
+
+      </button>
+
+      <button
+        *ngIf="editingFeeId !== null"
+        type="button"
+        class="secondary-button"
+        (click)="clearForm(); editingFeeId = null">
+
+        Cancel
+
+      </button>
+
+    </div>
+
+  </div>
+
+  <div class="fee-list-card">
+
+    <div class="section-title">
+
+      <div>
+        <h2>Fee Records</h2>
+        <p>All student payment records</p>
+      </div>
+
+    </div>
+
+    <div class="table-wrapper">
+
+      <table *ngIf="feeList.length > 0">
+
+        <thead>
+
+          <tr>
+            <th>ID</th>
+            <th>Student</th>
+            <th>Amount</th>
+            <th>Payment Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          <tr *ngFor="let fee of feeList">
+
+            <td>
+              <span class="fee-id">
+                #{{ fee.id }}
+              </span>
+            </td>
+
+            <td>
+              <div class="student-name">
+                {{ getStudentName(fee.studentId) }}
+              </div>
+            </td>
+
+            <td>
+              <span class="amount">
+                ₹{{ fee.amount }}
+              </span>
+            </td>
+
+            <td>
+              {{ fee.paymentDate | date:'dd-MM-yyyy' }}
+            </td>
+
+            <td>
+
+              <span
+                class="status-badge"
+                [class.paid]="fee.paymentStatus?.toLowerCase() === 'paid'"
+                [class.pending]="fee.paymentStatus?.toLowerCase() === 'pending'">
+
+                {{ fee.paymentStatus }}
+
+              </span>
+
+            </td>
+
+            <td>
+
+              <div class="action-buttons">
+
+                <button
+                  type="button"
+                  class="edit-button"
+                  (click)="editFee(fee)">
+
+                  Edit
+
+                </button>
+
+                <button
+                  type="button"
+                  class="delete-button"
+                  (click)="deleteFee(fee.id)">
+
+                  Delete
+
+                </button>
+
+              </div>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <div
+      class="empty-state"
+      *ngIf="feeList.length === 0">
+
+      No fee records found.
+
+    </div>
+
+  </div>
+
+</div>

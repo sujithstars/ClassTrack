@@ -1,0 +1,273 @@
+.teacher-page {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  margin: 0;
+  color: #2b3a4a;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.page-header p {
+  margin: 6px 0 0;
+  color: #8a96a3;
+  font-size: 13px;
+}
+
+.teacher-count {
+  padding: 9px 14px;
+  border-radius: 10px;
+  background: #e8f2d9;
+  color: #7dc40f;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.teacher-form-card,
+.teacher-list-card {
+  background: #ffffff;
+  border: 1px solid #eceff2;
+  border-radius: 18px;
+  padding: 25px;
+  margin-bottom: 20px;
+}
+
+.section-title {
+  margin-bottom: 20px;
+}
+
+.section-title h2 {
+  margin: 0;
+  color: #2b3a4a;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.section-title p {
+  margin: 5px 0 0;
+  color: #8a96a3;
+  font-size: 12px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 7px;
+  color: #2b3a4a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.form-group input {
+  width: 100%;
+  height: 44px;
+  padding: 0 13px;
+  border: 1px solid #eceff2;
+  border-radius: 10px;
+  background: #f6f7f8;
+  color: #2b3a4a;
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+  transition: 0.2s ease;
+}
+
+.form-group input:focus {
+  border-color: #7dc40f;
+  background: #ffffff;
+}
+
+.form-group input::placeholder {
+  color: #a4adb6;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.primary-button,
+.secondary-button {
+  height: 42px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-button {
+  background: #7dc40f;
+  color: #ffffff;
+}
+
+.primary-button:hover {
+  opacity: 0.9;
+}
+
+.primary-button:disabled {
+  background: #b9c5cf;
+  cursor: not-allowed;
+}
+
+.secondary-button {
+  background: #f6f7f8;
+  color: #8a96a3;
+}
+
+.secondary-button:hover {
+  background: #eceff2;
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 7px;
+  min-width: 650px;
+}
+
+thead th {
+  padding: 12px 14px;
+  background: #f6f7f8;
+  color: #8a96a3;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: left;
+}
+
+thead th:first-child {
+  border-radius: 10px 0 0 10px;
+}
+
+thead th:last-child {
+  border-radius: 0 10px 10px 0;
+}
+
+tbody td {
+  padding: 14px;
+  border-top: 1px solid #f1f3f5;
+  border-bottom: 1px solid #f1f3f5;
+  color: #667381;
+  font-size: 11px;
+}
+
+tbody td:first-child {
+  border-left: 1px solid #f1f3f5;
+  border-radius: 10px 0 0 10px;
+}
+
+tbody td:last-child {
+  border-right: 1px solid #f1f3f5;
+  border-radius: 0 10px 10px 0;
+}
+
+.teacher-id {
+  color: #8a96a3;
+  font-weight: 700;
+}
+
+.teacher-name {
+  color: #2b3a4a;
+  font-weight: 700;
+}
+
+.subject-badge {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: #e8f2d9;
+  color: #7dc40f;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 7px;
+}
+
+.edit-button,
+.delete-button {
+  height: 30px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.edit-button {
+  background: #dcecfa;
+  color: #2f9bec;
+}
+
+.delete-button {
+  background: #fde0e0;
+  color: #ff4a4a;
+}
+
+.edit-button:hover,
+.delete-button:hover {
+  opacity: 0.8;
+}
+
+.empty-state {
+  padding: 30px;
+  text-align: center;
+  color: #8a96a3;
+  background: #f6f7f8;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+@media (max-width: 800px) {
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+@media (max-width: 650px) {
+
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .teacher-form-card,
+  .teacher-list-card {
+    padding: 18px;
+  }
+
+}

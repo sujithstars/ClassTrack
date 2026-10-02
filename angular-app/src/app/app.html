@@ -1,0 +1,60 @@
+<div class="app-shell">
+
+  <aside class="sidebar">
+
+    <div class="brand">
+      <div class="brand-icon">C</div>
+
+      <div>
+        <div class="brand-name">ClassTrack</div>
+        <div class="brand-subtitle">Tuition Management</div>
+      </div>
+    </div>
+
+    <nav class="menu">
+
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <span class="menu-icon">⌂</span>
+        <span>Dashboard</span>
+      </a>
+
+      <a routerLink="/students" routerLinkActive="active">
+        <span class="menu-icon">♙</span>
+        <span>Students</span>
+      </a>
+
+      <a routerLink="/teacher" routerLinkActive="active">
+        <span class="menu-icon">♙</span>
+        <span>Teachers</span>
+      </a>
+
+      <a routerLink="/attendance" routerLinkActive="active">
+        <span class="menu-icon">✓</span>
+        <span>Attendance</span>
+      </a>
+
+      <a routerLink="/fee" routerLinkActive="active">
+        <span class="menu-icon">₹</span>
+        <span>Fees</span>
+      </a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+
+      <button type="button" class="logout-button" (click)="logout()">
+        <span class="menu-icon">↪</span>
+        <span>Logout</span>
+      </button>
+
+    </div>
+
+  </aside>
+
+  <main class="main-content">
+
+    <router-outlet></router-outlet>
+
+  </main>
+
+</div>

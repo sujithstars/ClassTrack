@@ -1,0 +1,192 @@
+<div class="teacher-page">
+
+  <div class="page-header">
+
+    <div>
+      <h1>Teachers</h1>
+      <p>Manage teacher information and subjects</p>
+    </div>
+
+    <div class="teacher-count">
+      {{ teachers.length }} Teachers
+    </div>
+
+  </div>
+
+  <div class="teacher-form-card">
+
+    <div class="section-title">
+
+      <div>
+        <h2>
+          {{ editingTeacherId !== null ? 'Update Teacher' : 'Add New Teacher' }}
+        </h2>
+
+        <p>
+          Enter the teacher details below
+        </p>
+      </div>
+
+    </div>
+
+    <div class="form-grid">
+
+      <div class="form-group">
+
+        <label>Teacher Name</label>
+
+        <input
+          type="text"
+          [(ngModel)]="teacherName"
+          placeholder="Enter teacher name">
+
+      </div>
+
+      <div class="form-group">
+
+        <label>Mobile Number</label>
+
+        <input
+          type="text"
+          [(ngModel)]="mobile"
+          placeholder="Enter 10-digit mobile number">
+
+      </div>
+
+      <div class="form-group">
+
+        <label>Subject</label>
+
+        <input
+          type="text"
+          [(ngModel)]="subject"
+          placeholder="Enter subject">
+
+      </div>
+
+    </div>
+
+    <div class="form-actions">
+
+      <button
+        type="button"
+        class="primary-button"
+        [disabled]="!teacherName.trim() || !mobile.trim() || !subject.trim()"
+        (click)="addTeacher()">
+
+        {{ editingTeacherId !== null ? 'Update Teacher' : 'Add Teacher' }}
+
+      </button>
+
+      <button
+        *ngIf="editingTeacherId !== null"
+        type="button"
+        class="secondary-button"
+        (click)="clearForm(); editingTeacherId = null">
+
+        Cancel
+
+      </button>
+
+    </div>
+
+  </div>
+
+  <div class="teacher-list-card">
+
+    <div class="section-title">
+
+      <div>
+        <h2>Teacher List</h2>
+        <p>All registered teachers</p>
+      </div>
+
+    </div>
+
+    <div class="table-wrapper">
+
+      <table *ngIf="teachers.length > 0">
+
+        <thead>
+
+          <tr>
+            <th>ID</th>
+            <th>Teacher</th>
+            <th>Mobile</th>
+            <th>Subject</th>
+            <th>Actions</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          <tr *ngFor="let teacher of teachers">
+
+            <td>
+              <span class="teacher-id">
+                #{{ teacher.id }}
+              </span>
+            </td>
+
+            <td>
+              <div class="teacher-name">
+                {{ teacher.teacherName }}
+              </div>
+            </td>
+
+            <td>
+              {{ teacher.mobile }}
+            </td>
+
+            <td>
+              <span class="subject-badge">
+                {{ teacher.subject }}
+              </span>
+            </td>
+
+            <td>
+
+              <div class="action-buttons">
+
+                <button
+                  type="button"
+                  class="edit-button"
+                  (click)="editTeacher(teacher)">
+
+                  Edit
+
+                </button>
+
+                <button
+                  type="button"
+                  class="delete-button"
+                  (click)="deleteTeacher(teacher.id)">
+
+                  Delete
+
+                </button>
+
+              </div>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <div
+      class="empty-state"
+      *ngIf="teachers.length === 0">
+
+      No teachers found.
+
+    </div>
+
+  </div>
+
+</div>

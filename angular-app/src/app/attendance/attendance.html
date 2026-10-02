@@ -1,0 +1,220 @@
+<div class="attendance-page">
+
+  <div class="page-header">
+
+    <div>
+      <h1>Attendance</h1>
+      <p>Track and manage student attendance</p>
+    </div>
+
+    <div class="attendance-count">
+      {{ attendanceList.length }} Records
+    </div>
+
+  </div>
+
+  <div class="attendance-form-card">
+
+    <div class="section-title">
+
+      <div>
+        <h2>
+          {{ editingAttendanceId !== null ? 'Update Attendance' : 'Mark Attendance' }}
+        </h2>
+
+        <p>
+          Select a student and record attendance
+        </p>
+      </div>
+
+    </div>
+
+    <div class="form-grid">
+
+      <div class="form-group">
+
+        <label>Student</label>
+
+        <select [(ngModel)]="studentId">
+
+          <option [ngValue]="0">
+            Select Student
+          </option>
+
+          @for (student of students; track student.id) {
+
+            <option [ngValue]="student.id">
+              {{ student.studentName }}
+            </option>
+
+          }
+
+        </select>
+
+      </div>
+
+      <div class="form-group">
+
+        <label>Attendance Date</label>
+
+        <input
+          type="date"
+          [(ngModel)]="attendanceDate">
+
+      </div>
+
+      <div class="form-group">
+
+        <label>Status</label>
+
+        <select [(ngModel)]="status">
+
+          <option value="">
+            Select Status
+          </option>
+
+          <option value="Present">
+            Present
+          </option>
+
+          <option value="Absent">
+            Absent
+          </option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+    <div class="form-actions">
+
+      <button
+        type="button"
+        class="primary-button"
+        [disabled]="studentId === 0 || !attendanceDate || !status"
+        (click)="addAttendance()">
+
+        {{ editingAttendanceId !== null ? 'Update Attendance' : 'Mark Attendance' }}
+
+      </button>
+
+      <button
+        *ngIf="editingAttendanceId !== null"
+        type="button"
+        class="secondary-button"
+        (click)="clearForm(); editingAttendanceId = null">
+
+        Cancel
+
+      </button>
+
+    </div>
+
+  </div>
+
+  <div class="attendance-list-card">
+
+    <div class="section-title">
+
+      <div>
+        <h2>Attendance Records</h2>
+        <p>Student attendance history</p>
+      </div>
+
+    </div>
+
+    <div class="table-wrapper">
+
+      <table *ngIf="attendanceList.length > 0">
+
+        <thead>
+
+          <tr>
+            <th>ID</th>
+            <th>Student</th>
+            <th>Attendance Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          <tr *ngFor="let attendance of attendanceList">
+
+            <td>
+              <span class="attendance-id">
+                #{{ attendance.id }}
+              </span>
+            </td>
+
+            <td>
+              <div class="student-name">
+                {{ getStudentName(attendance.studentId) }}
+              </div>
+            </td>
+
+            <td>
+              {{ attendance.attendanceDate | date:'dd-MM-yyyy' }}
+            </td>
+
+            <td>
+
+              <span
+                class="status-badge"
+                [class.present]="attendance.status?.toLowerCase() === 'present'"
+                [class.absent]="attendance.status?.toLowerCase() === 'absent'">
+
+                {{ attendance.status }}
+
+              </span>
+
+            </td>
+
+            <td>
+
+              <div class="action-buttons">
+
+                <button
+                  type="button"
+                  class="edit-button"
+                  (click)="editAttendance(attendance)">
+
+                  Edit
+
+                </button>
+
+                <button
+                  type="button"
+                  class="delete-button"
+                  (click)="deleteAttendance(attendance.id)">
+
+                  Delete
+
+                </button>
+
+              </div>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <div
+      class="empty-state"
+      *ngIf="attendanceList.length === 0">
+
+      No attendance records found.
+
+    </div>
+
+  </div>
+
+</div>

@@ -1,0 +1,73 @@
+<link rel="stylesheet" href="../css/style.css">
+<form id="studentForm">
+    
+
+    <label>Student Name</label>
+    <input type="text" id="studentName" placeholder="Enter student name" required>
+
+    <br><br>
+
+    <label>Parent Name</label>
+    <input type="text" id="parentName" placeholder="Enter parent name" required>
+
+    <br><br>
+
+    <label>Mobile Number</label>
+    <input type="text" id="mobile" placeholder="Enter mobile number" required>
+
+    <br><br>
+
+    <label>Class</label>
+    <select id="studentClass" required>
+        <option value="" disabled selected>Select Class</option>
+        <option>1st Standard</option>
+        <option>2nd Standard</option>
+        <option>3rd Standard</option>
+        <option>4th Standard</option>
+        <option>5th Standard</option>
+        <option>6th Standard</option>
+        <option>7th Standard</option>
+        <option>8th Standard</option>
+        <option>9th Standard</option>
+        <option>10th Standard</option>
+        <option>Engineering</option>
+    </select>
+
+    <br><br>
+
+    <label>Board</label>
+    <select id="board" required>
+        <option value="" disabled selected>Select Board</option>
+        <option>CBSE</option>
+        <option>State Board</option>
+        <option>Matriculation</option>
+    </select>
+
+    <br><br>
+
+    <button type="submit">Add Student</button>
+
+</form>
+<hr>
+
+<h2>Student List</h2>
+<input type="text" id="searchStudent" placeholder="Search student name">
+<table id="studentTable">
+
+    <thead>
+        <tr>
+            <th>Student Name</th>
+            <th>Parent Name</th>
+            <th>Mobile</th>
+            <th>Class</th>
+            <th>Board</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody id="studentTableBody">
+
+    </tbody>
+
+</table>
+<script src="../JS/script.js"></script>
