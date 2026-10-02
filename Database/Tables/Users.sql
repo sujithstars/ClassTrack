@@ -1,0 +1,10 @@
+-- ClassTrack Database
+-- Users Table
+
+CREATE TABLE Users
+(
+Id INT IDENTITY(1,1) PRIMARY KEY,
+Username NVARCHAR(100) NOT NULL,
+PasswordHash NVARCHAR(500) NOT NULL,
+Role NVARCHAR(50) NOT NULL DEFAULT 'User'
+);

@@ -1,0 +1,11 @@
+-- ClassTrack Database
+-- Students Table
+
+CREATE TABLE Students
+(
+Id INT IDENTITY(1,1) PRIMARY KEY,
+StudentName NVARCHAR(100) NOT NULL,
+ParentName NVARCHAR(100) NOT NULL,
+Mobile NVARCHAR(20) NOT NULL,
+Class NVARCHAR(50) NOT NULL
+);
