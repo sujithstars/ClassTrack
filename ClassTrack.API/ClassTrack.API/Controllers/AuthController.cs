@@ -29,6 +29,8 @@ namespace ClassTrack.API.Controllers
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest request)
         {
+try
+{
             var user = _context.Users
                 .FirstOrDefault(x => x.Username == request.Username);
 
@@ -79,6 +81,10 @@ namespace ClassTrack.API.Controllers
                 role = user.Role
             });
         }
+catch (Exception ex)
+{
+    return StatusCode(500, ex.Message);
+}
     }
 
     public class LoginRequest
