@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 @Injectable({
   providedIn: 'root'
 })
-export class StudentService  {
+export class StudentService {
 
   private apiUrl = 'https://localhost:7133/api/Student';
 
@@ -17,10 +17,12 @@ export class StudentService  {
   addStudent(student: any) {
     return this.http.post<any>(this.apiUrl, student);
   }
+
   deleteStudent(id: number) {
-  return this.http.delete(`${this.apiUrl}/${id}`);
-}
-updateStudent(id: number, student: any) {
-  return this.http.put<any>(`${this.apiUrl}/${id}`, student);
-}
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+
+  updateStudent(id: number, student: any) {
+    return this.http.put<any>(`${this.apiUrl}/${id}`, student);
+  }
 }

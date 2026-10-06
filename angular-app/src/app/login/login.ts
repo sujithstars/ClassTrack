@@ -15,7 +15,7 @@ export class Login {
   username = '';
   password = '';
 
-  private apiUrl = 'https://localhost:7133/api/Auth/login';
+  private apiUrl = 'https://localhost:7133/api/Auth/Login';
 
   constructor(
     private http: HttpClient,
@@ -25,16 +25,21 @@ export class Login {
   login() {
 
     const loginData = {
-  username: this.username,
-  password: this.password
-};
+      username: this.username,
+      password: this.password
+    };
 
     this.http.post<any>(this.apiUrl, loginData).subscribe({
 
       next: (response) => {
 
         localStorage.setItem('token', response.token);
-alert('Token saved: ' + (localStorage.getItem('token') ? 'YES' : 'NO'));
+
+        alert(
+          'Token saved: ' +
+          (localStorage.getItem('token') ? 'YES' : 'NO')
+        );
+
         localStorage.setItem('username', response.username);
         localStorage.setItem('role', response.role);
 

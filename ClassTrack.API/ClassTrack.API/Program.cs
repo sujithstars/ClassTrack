@@ -83,7 +83,7 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowAngular");
 
-app.UseExceptionHandler("/error");
+//app.UseExceptionHandler("/error");
 
 app.UseAuthentication();
 app.UseAuthorization();
