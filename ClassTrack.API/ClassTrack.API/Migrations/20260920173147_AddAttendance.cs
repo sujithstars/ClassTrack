@@ -11,20 +11,26 @@ namespace ClassTrack.API.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "Attendances",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    StudentId = table.Column<int>(type: "int", nullable: false),
-                    AttendanceDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Attendances", x => x.Id);
-                });
+            migrationBuilder.Sql(
+                """
+                IF OBJECT_ID(N'[dbo].[Attendances]', N'U') IS NULL
+                   AND OBJECT_ID(N'[dbo].[Attendance]', N'U') IS NOT NULL
+                BEGIN
+                    EXEC sp_rename N'[dbo].[Attendance]', N'Attendances';
+                END
+
+                IF OBJECT_ID(N'[dbo].[Attendances]', N'U') IS NULL
+                BEGIN
+                    CREATE TABLE [dbo].[Attendances]
+                    (
+                        [Id] int IDENTITY(1,1) NOT NULL,
+                        [StudentId] int NOT NULL,
+                        [AttendanceDate] datetime2 NOT NULL,
+                        [Status] nvarchar(max) NOT NULL,
+                        CONSTRAINT [PK_Attendances] PRIMARY KEY ([Id])
+                    );
+                END
+                """);
         }
 
         /// <inheritdoc />

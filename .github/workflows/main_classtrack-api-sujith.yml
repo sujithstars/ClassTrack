@@ -18,6 +18,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: angular-app/package-lock.json
+
+      - name: Install Angular dependencies
+        run: npm ci --prefix angular-app
+
+      - name: Run Angular unit tests
+        run: npm run test --prefix angular-app -- --watch=false --isolate=false
+
+      - name: Build Angular for production
+        run: npm run build --prefix angular-app -- --configuration production
+
+      - name: Include Angular app in API package
+        shell: pwsh
+        run: |
+          $webRoot = "ClassTrack.API/ClassTrack.API/wwwroot"
+          New-Item -ItemType Directory -Path $webRoot -Force | Out-Null
+          Copy-Item -Path "angular-app/dist/angular-app/browser/*" -Destination $webRoot -Recurse -Force
+
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
@@ -55,6 +78,40 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_0ECBA1718C7946B39C8A660E6E10E819 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_4A7AEB468041438394DCCE01473F9E4E }}
 
+      - name: Verify required App Service settings
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $resourceGroup = az webapp show --name "classtrack-api-sujith" --query resourceGroup -o tsv
+          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($resourceGroup)) {
+            throw "Unable to locate the Azure Web App resource group."
+          }
+
+          $settingsJson = az webapp config appsettings list --name "classtrack-api-sujith" --resource-group $resourceGroup -o json
+          if ($LASTEXITCODE -ne 0) {
+            throw "Unable to read the Azure Web App settings."
+          }
+          $settings = $settingsJson | ConvertFrom-Json
+          foreach ($name in @("ConnectionStrings__DefaultConnection", "Jwt__Key", "Jwt__Issuer", "Jwt__Audience")) {
+            $setting = $settings | Where-Object { $_.name -eq $name } | Select-Object -First 1
+            if ($null -eq $setting -or [string]::IsNullOrWhiteSpace($setting.value)) {
+              throw "Required Azure Web App setting is missing: $name"
+            }
+          }
+          $jwtKey = ($settings | Where-Object { $_.name -eq "Jwt__Key" } | Select-Object -First 1).value
+          if ([Text.Encoding]::UTF8.GetByteCount($jwtKey) -lt 32) {
+            throw "Jwt__Key must contain at least 32 bytes."
+          }
+
+          az webapp config appsettings set `
+            --name "classtrack-api-sujith" `
+            --resource-group $resourceGroup `
+            --settings "Database__ApplyMigrations=true" `
+            --output none
+          if ($LASTEXITCODE -ne 0) {
+            throw "Unable to enable EF Core migrations for the deployment."
+          }
+
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
@@ -62,3 +119,32 @@ jobs:
           app-name: 'classtrack-api-sujith'
           slot-name: 'Production'
           package: .
+
+      - name: Verify deployed app and database connectivity
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $baseUrl = "https://classtrack-api-sujith-hxfte0dqhbcmd3dj.centralindia-01.azurewebsites.net"
+          $app = Invoke-WebRequest -Uri $baseUrl -TimeoutSec 60
+          if ($app.StatusCode -ne 200 -or $app.Content -notmatch "<app-root") {
+            throw "The deployed Angular application did not return its entry page."
+          }
+
+          $swagger = Invoke-WebRequest -Uri "$baseUrl/swagger/index.html" -TimeoutSec 30
+          if ($swagger.StatusCode -ne 200) {
+            throw "The deployed API Swagger page is unavailable."
+          }
+
+          $probe = @{
+            username = "__deployment_probe_$([Guid]::NewGuid().ToString('N'))"
+            password = [Guid]::NewGuid().ToString('N')
+          } | ConvertTo-Json -Compress
+          try {
+            $response = Invoke-WebRequest -Uri "$baseUrl/api/Auth/login" -Method Post -ContentType "application/json" -Body $probe -TimeoutSec 30
+            $statusCode = [int]$response.StatusCode
+          } catch {
+            $statusCode = [int]$_.Exception.Response.StatusCode
+          }
+          if ($statusCode -ne 401) {
+            throw "The database-backed login probe returned HTTP $statusCode instead of 401."
+          }

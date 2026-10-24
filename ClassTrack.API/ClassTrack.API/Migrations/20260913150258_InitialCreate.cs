@@ -10,21 +10,21 @@ namespace ClassTrack.API.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "Students",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    StudentName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ParentName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Mobile = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Class = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Students", x => x.Id);
-                });
+            migrationBuilder.Sql(
+                """
+                IF OBJECT_ID(N'[dbo].[Students]', N'U') IS NULL
+                BEGIN
+                    CREATE TABLE [dbo].[Students]
+                    (
+                        [Id] int IDENTITY(1,1) NOT NULL,
+                        [StudentName] nvarchar(max) NOT NULL,
+                        [ParentName] nvarchar(max) NOT NULL,
+                        [Mobile] nvarchar(max) NOT NULL,
+                        [Class] nvarchar(max) NOT NULL,
+                        CONSTRAINT [PK_Students] PRIMARY KEY ([Id])
+                    );
+                END
+                """);
         }
 
         /// <inheritdoc />

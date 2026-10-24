@@ -10,20 +10,20 @@ namespace ClassTrack.API.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "Users",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Username = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Role = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Users", x => x.Id);
-                });
+            migrationBuilder.Sql(
+                """
+                IF OBJECT_ID(N'[dbo].[Users]', N'U') IS NULL
+                BEGIN
+                    CREATE TABLE [dbo].[Users]
+                    (
+                        [Id] int IDENTITY(1,1) NOT NULL,
+                        [Username] nvarchar(max) NOT NULL,
+                        [PasswordHash] nvarchar(max) NOT NULL,
+                        [Role] nvarchar(max) NOT NULL,
+                        CONSTRAINT [PK_Users] PRIMARY KEY ([Id])
+                    );
+                END
+                """);
         }
 
         /// <inheritdoc />
