@@ -157,6 +157,18 @@ jobs:
             throw "Unable to disable automatic startup migrations."
           }
 
+          az webapp log config `
+            --name "classtrack-api-sujith" `
+            --resource-group $resourceGroup `
+            --application-logging filesystem `
+            --level error `
+            --output none
+          if ($LASTEXITCODE -ne 0) {
+            throw "Unable to enable App Service error logging."
+          }
+
+          "resourceGroup=$resourceGroup" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
@@ -192,4 +204,27 @@ jobs:
           }
           if ($statusCode -ne 401) {
             throw "The database-backed login probe returned HTTP $statusCode instead of 401."
+          }
+
+      - name: Capture redacted App Service error logs
+        if: failure()
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Continue"
+          $logs = az webapp log tail `
+            --name "classtrack-api-sujith" `
+            --resource-group $env:resourceGroup `
+            --provider application `
+            --timeout 20 2>&1 | Out-String
+          $logs = $logs -replace '(?i)(password|pwd)\s*=\s*[^;\s]+', '$1=[REDACTED]'
+          $logs = $logs -replace '(?i)(user\s*id|uid)\s*=\s*[^;\s]+', '$1=[REDACTED]'
+          $logs = $logs -replace '(?i)(accountkey|sharedaccesssignature)\s*=\s*[^;\s]+', '$1=[REDACTED]'
+          $lines = $logs -split "`r?`n" | Where-Object {
+            $_ -match '(?i)exception|sql|database|login failed|invalid object|cannot open|timeout|error'
+          } | Select-Object -Last 40
+          if ($lines) {
+            $lines | ForEach-Object { Write-Host $_ }
+          } else {
+            Write-Host "No matching App Service error log entries were available."
           }
