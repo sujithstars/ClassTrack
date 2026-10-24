@@ -148,13 +148,15 @@ jobs:
             throw "Jwt__Key must contain at least 32 bytes."
           }
 
+          $diagnosticToken = [Guid]::NewGuid().ToString("N") + [Guid]::NewGuid().ToString("N")
+          Write-Output "::add-mask::$diagnosticToken"
           az webapp config appsettings set `
             --name "classtrack-api-sujith" `
             --resource-group $resourceGroup `
-            --settings "Database__ApplyMigrations=false" `
+            --settings "Database__ApplyMigrations=false" "DeploymentDiagnostics__Token=$diagnosticToken" `
             --output none
           if ($LASTEXITCODE -ne 0) {
-            throw "Unable to disable automatic startup migrations."
+            throw "Unable to configure safe deployment settings."
           }
 
           az webapp log config `
@@ -168,6 +170,7 @@ jobs:
           }
 
           "resourceGroup=$resourceGroup" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "DEPLOYMENT_DIAGNOSTIC_TOKEN=$diagnosticToken" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
@@ -176,56 +179,6 @@ jobs:
           app-name: 'classtrack-api-sujith'
           slot-name: 'Production'
           package: .
-
-      - name: Probe configured Azure SQL connection
-        continue-on-error: true
-        shell: pwsh
-        run: |
-          $settingsJson = az webapp config appsettings list --name "classtrack-api-sujith" --resource-group $env:resourceGroup -o json
-          $settings = $settingsJson | ConvertFrom-Json
-          $connectionStringSetting = $settings | Where-Object { $_.name -eq "ConnectionStrings__DefaultConnection" } | Select-Object -First 1
-          $connectionString = if ($connectionStringSetting) { $connectionStringSetting.value } else { $null }
-          if ([string]::IsNullOrWhiteSpace($connectionString)) {
-            $connectionStringsJson = az webapp config connection-string list --name "classtrack-api-sujith" --resource-group $env:resourceGroup -o json
-            $connectionStrings = $connectionStringsJson | ConvertFrom-Json
-            $connectionString = ($connectionStrings | Where-Object { $_.name -eq "DefaultConnection" } | Select-Object -First 1).value
-          }
-          if ([string]::IsNullOrWhiteSpace($connectionString)) {
-            Write-Host "SQL probe unavailable: no DefaultConnection value was found."
-            exit 0
-          }
-
-          Write-Output "::add-mask::$connectionString"
-          try {
-            Add-Type -Path (Join-Path $PWD "Microsoft.Data.SqlClient.dll")
-            $builder = [Microsoft.Data.SqlClient.SqlConnectionStringBuilder]::new($connectionString)
-            $builder.ConnectTimeout = 10
-            $connection = [Microsoft.Data.SqlClient.SqlConnection]::new($builder.ConnectionString)
-            $connection.Open()
-            $command = $connection.CreateCommand()
-            $command.CommandText = "SELECT CONVERT(bit, CASE WHEN OBJECT_ID(N'dbo.Users', N'U') IS NOT NULL THEN 1 ELSE 0 END), CONVERT(bit, CASE WHEN OBJECT_ID(N'dbo.__EFMigrationsHistory', N'U') IS NOT NULL THEN 1 ELSE 0 END)"
-            $reader = $command.ExecuteReader()
-            if ($reader.Read()) {
-              Write-Host "SQL probe succeeded. Users table exists: $($reader.GetBoolean(0)); EF migration history exists: $($reader.GetBoolean(1))."
-            }
-            $reader.Dispose()
-            $command.Dispose()
-            $connection.Dispose()
-          } catch {
-            $exception = $_.Exception
-            while ($exception.InnerException) {
-              $exception = $exception.InnerException
-            }
-            $message = $exception.Message `
-              -replace '(?i)(password|pwd)\s*=\s*[^;\s]+', '$1=[REDACTED]' `
-              -replace '(?i)(user\s*id|uid)\s*=\s*[^;\s]+', '$1=[REDACTED]' `
-              -replace '(?i)(accountkey|sharedaccesssignature)\s*=\s*[^;\s]+', '$1=[REDACTED]'
-            if ($exception.GetType().FullName -eq "Microsoft.Data.SqlClient.SqlException") {
-              Write-Host "SQL probe failed with SqlException number $($exception.Number), state $($exception.State), class $($exception.Class): $message"
-            } else {
-              Write-Host "SQL probe failed with $($exception.GetType().Name): $message"
-            }
-          }
 
       - name: Verify deployed app and database connectivity
         shell: pwsh
@@ -241,6 +194,18 @@ jobs:
           if ($swagger.StatusCode -ne 200) {
             throw "The deployed API Swagger page is unavailable."
           }
+
+          $database = Invoke-RestMethod `
+            -Uri "$baseUrl/api/_deployment/database-check" `
+            -Headers @{ "X-Deployment-Diagnostic-Token" = $env:DEPLOYMENT_DIAGNOSTIC_TOKEN } `
+            -TimeoutSec 30
+          if (-not $database.databaseConnected) {
+            throw "Azure SQL returned error number $($database.sqlErrorNumber)."
+          }
+          if (-not $database.usersTableExists) {
+            throw "Azure SQL is reachable, but dbo.Users is missing."
+          }
+          Write-Host "Azure SQL connection and dbo.Users table verified."
 
           $probe = @{
             username = "__deployment_probe_$([Guid]::NewGuid().ToString('N'))"
@@ -295,3 +260,14 @@ jobs:
           } else {
             Write-Host "No SQL-related errors were found in the App Service application logs."
           }
+
+      - name: Remove temporary deployment diagnostic token
+        if: always()
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          az webapp config appsettings delete `
+            --name "classtrack-api-sujith" `
+            --resource-group $env:resourceGroup `
+            --setting-names "DeploymentDiagnostics__Token" `
+            --output none

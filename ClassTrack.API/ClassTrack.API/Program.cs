@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Cryptography;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -143,6 +144,48 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapGet("/api/_deployment/database-check", async (
+    HttpContext context,
+    IConfiguration configuration,
+    ClassTrackDbContext dbContext) =>
+{
+    var expectedToken = configuration["DeploymentDiagnostics:Token"];
+    var providedToken = context.Request.Headers["X-Deployment-Diagnostic-Token"].ToString();
+    if (string.IsNullOrEmpty(expectedToken) ||
+        !CryptographicOperations.FixedTimeEquals(
+            Encoding.UTF8.GetBytes(expectedToken),
+            Encoding.UTF8.GetBytes(providedToken)))
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await dbContext.Database.OpenConnectionAsync();
+        await using var command = dbContext.Database.GetDbConnection().CreateCommand();
+        command.CommandText = """
+            SELECT
+                CONVERT(bit, CASE WHEN OBJECT_ID(N'dbo.Users', N'U') IS NOT NULL THEN 1 ELSE 0 END),
+                CONVERT(bit, CASE WHEN OBJECT_ID(N'dbo.__EFMigrationsHistory', N'U') IS NOT NULL THEN 1 ELSE 0 END)
+            """;
+        await using var reader = await command.ExecuteReaderAsync();
+        await reader.ReadAsync();
+
+        return Results.Ok(new
+        {
+            databaseConnected = true,
+            usersTableExists = reader.GetBoolean(0),
+            migrationHistoryExists = reader.GetBoolean(1)
+        });
+    }
+    catch (Microsoft.Data.SqlClient.SqlException exception)
+    {
+        return Results.Json(
+            new { databaseConnected = false, sqlErrorNumber = exception.Number },
+            statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+});
 
 app.MapFallback(async context =>
 {
