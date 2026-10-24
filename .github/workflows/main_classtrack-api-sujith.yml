@@ -82,7 +82,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $resourceGroup = az webapp show --name "classtrack-api-sujith" --query resourceGroup -o tsv
+          $resourceGroup = az webapp list --query "[?name=='classtrack-api-sujith'] | [0].resourceGroup" -o tsv
           if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($resourceGroup)) {
             throw "Unable to locate the Azure Web App resource group."
           }
