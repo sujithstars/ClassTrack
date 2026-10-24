@@ -212,15 +212,27 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Continue"
-          $logs = az webapp log tail `
+          $archive = Join-Path $env:RUNNER_TEMP "classtrack-appservice-logs.zip"
+          $logDirectory = Join-Path $env:RUNNER_TEMP "classtrack-appservice-logs"
+          az webapp log download `
             --name "classtrack-api-sujith" `
             --resource-group $env:resourceGroup `
-            --provider application `
-            --timeout 20 2>&1 | Out-String
-          $logs = $logs -replace '(?i)(password|pwd)\s*=\s*[^;\s]+', '$1=[REDACTED]'
-          $logs = $logs -replace '(?i)(user\s*id|uid)\s*=\s*[^;\s]+', '$1=[REDACTED]'
-          $logs = $logs -replace '(?i)(accountkey|sharedaccesssignature)\s*=\s*[^;\s]+', '$1=[REDACTED]'
-          $lines = $logs -split "`r?`n" | Where-Object {
+            --log-file $archive `
+            --output none
+          if ($LASTEXITCODE -ne 0 -or -not (Test-Path $archive)) {
+            Write-Host "Unable to download App Service logs."
+            exit 0
+          }
+
+          Expand-Archive -LiteralPath $archive -DestinationPath $logDirectory -Force
+          $lines = Get-ChildItem -LiteralPath $logDirectory -Recurse -File |
+            ForEach-Object { Get-Content -LiteralPath $_.FullName } |
+            ForEach-Object {
+              $_ -replace '(?i)(password|pwd)\s*=\s*[^;\s]+', '$1=[REDACTED]' `
+                 -replace '(?i)(user\s*id|uid)\s*=\s*[^;\s]+', '$1=[REDACTED]' `
+                 -replace '(?i)(accountkey|sharedaccesssignature)\s*=\s*[^;\s]+', '$1=[REDACTED]'
+            } |
+            Where-Object {
             $_ -match '(?i)exception|sql|database|login failed|invalid object|cannot open|timeout|error'
           } | Select-Object -Last 40
           if ($lines) {
