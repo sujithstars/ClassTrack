@@ -93,8 +93,7 @@ app.MapControllers();
 app.Map("/error", () =>
 {
     return Results.Problem(
-    statusCode: 500,
-    title: "An unexpected error occurred.",
+        title: "An unexpected error occurred.",
     detail: "Please try again later."
     );
 });
