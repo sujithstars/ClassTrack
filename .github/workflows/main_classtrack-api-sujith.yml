@@ -219,13 +219,15 @@ jobs:
             --resource-group $env:resourceGroup `
             --log-file $archive `
             --output none
-          if ($LASTEXITCODE -ne 0 -or -not (Test-Path $archive)) {
+          if (-not (Test-Path $archive)) {
             Write-Host "Unable to download App Service logs."
             exit 0
           }
 
           Expand-Archive -LiteralPath $archive -DestinationPath $logDirectory -Force
-          $lines = Get-ChildItem -LiteralPath $logDirectory -Recurse -File |
+          $appLogFiles = Get-ChildItem -LiteralPath $logDirectory -Recurse -File |
+            Where-Object { $_.FullName -match '[\\/]Application[\\/]' }
+          $lines = $appLogFiles |
             ForEach-Object { Get-Content -LiteralPath $_.FullName } |
             ForEach-Object {
               $_ -replace '(?i)(password|pwd)\s*=\s*[^;\s]+', '$1=[REDACTED]' `
@@ -233,10 +235,13 @@ jobs:
                  -replace '(?i)(accountkey|sharedaccesssignature)\s*=\s*[^;\s]+', '$1=[REDACTED]'
             } |
             Where-Object {
-            $_ -match '(?i)exception|sql|database|login failed|invalid object|cannot open|timeout|error'
-          } | Select-Object -Last 40
+              $_ -match '(?i)exception|sqlclient|login failed|invalid object name|cannot open database|connection.*failed|timeout expired'
+            } | Select-Object -Last 40 |
+            ForEach-Object { if ($_.Length -gt 500) { $_.Substring(0, 500) } else { $_ } }
           if ($lines) {
             $lines | ForEach-Object { Write-Host $_ }
+          } elseif (-not $appLogFiles) {
+            Write-Host "The App Service archive contained no application log files."
           } else {
-            Write-Host "No matching App Service error log entries were available."
+            Write-Host "No SQL-related errors were found in the App Service application logs."
           }
