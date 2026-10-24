@@ -92,6 +92,8 @@ jobs:
             throw "Unable to read the Azure Web App settings."
           }
           $settings = $settingsJson | ConvertFrom-Json
+          Write-Host "Configured App Service setting names (values hidden):"
+          $settings | ForEach-Object { Write-Host "  $($_.name)" }
           foreach ($name in @("Jwt__Key", "Jwt__Issuer", "Jwt__Audience")) {
             $setting = $settings | Where-Object { $_.name -eq $name } | Select-Object -First 1
             if ($null -eq $setting -or [string]::IsNullOrWhiteSpace($setting.value)) {
@@ -106,9 +108,38 @@ jobs:
               throw "Unable to read Azure Web App connection-string names."
             }
             $connectionStrings = $connectionStringsJson | ConvertFrom-Json
+            Write-Host "Configured App Service connection-string names and types (values hidden):"
+            $connectionStrings | ForEach-Object { Write-Host "  $($_.name) ($($_.type))" }
             $connectionString = $connectionStrings | Where-Object { $_.name -eq "DefaultConnection" } | Select-Object -First 1
             if ($null -eq $connectionString -or [string]::IsNullOrWhiteSpace($connectionString.connectionString)) {
-              throw "Azure SQL connection is missing: configure ConnectionStrings__DefaultConnection as an App setting or add a DefaultConnection SQLAzure connection string."
+              $identityJson = az webapp identity show --name "classtrack-api-sujith" --resource-group $resourceGroup -o json 2>$null
+              $identity = if ($LASTEXITCODE -eq 0 -and $identityJson) { $identityJson | ConvertFrom-Json } else { $null }
+              $sqlServersJson = az sql server list --query "[].{name:name,resourceGroup:resourceGroup}" -o json 2>$null
+              $sqlServers = if ($LASTEXITCODE -eq 0 -and $sqlServersJson) { $sqlServersJson | ConvertFrom-Json } else { @() }
+
+              Write-Host "App Service system-assigned identity enabled: $([bool]($identity -and $identity.principalId))"
+              if ($sqlServers.Count -eq 0) {
+                Write-Host "Azure SQL servers visible to this deployment identity: none"
+              } else {
+                Write-Host "Azure SQL servers visible to this deployment identity:"
+                foreach ($server in $sqlServers) {
+                  Write-Host "  $($server.name) (resource group: $($server.resourceGroup))"
+                  $databasesJson = az sql db list --server $server.name --resource-group $server.resourceGroup --query "[].name" -o json 2>$null
+                  if ($LASTEXITCODE -eq 0 -and $databasesJson) {
+                    $databases = $databasesJson | ConvertFrom-Json
+                    foreach ($database in $databases) {
+                      Write-Host "    database: $database"
+                    }
+                  }
+                  $adminsJson = az sql server ad-admin list --server $server.name --resource-group $server.resourceGroup -o json 2>$null
+                  if ($LASTEXITCODE -eq 0 -and $adminsJson) {
+                    $admins = $adminsJson | ConvertFrom-Json
+                    Write-Host "    Microsoft Entra SQL administrator configured: $([bool]$admins.Count)"
+                  }
+                }
+              }
+
+              throw "Azure SQL connection string is missing. See the resource and identity inventory above; add DefaultConnection or configure SQL access for the App Service identity."
             }
           }
 
