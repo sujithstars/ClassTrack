@@ -216,10 +216,14 @@ jobs:
             while ($exception.InnerException) {
               $exception = $exception.InnerException
             }
+            $message = $exception.Message `
+              -replace '(?i)(password|pwd)\s*=\s*[^;\s]+', '$1=[REDACTED]' `
+              -replace '(?i)(user\s*id|uid)\s*=\s*[^;\s]+', '$1=[REDACTED]' `
+              -replace '(?i)(accountkey|sharedaccesssignature)\s*=\s*[^;\s]+', '$1=[REDACTED]'
             if ($exception.GetType().FullName -eq "Microsoft.Data.SqlClient.SqlException") {
-              Write-Host "SQL probe failed with SqlException number $($exception.Number), state $($exception.State), class $($exception.Class)."
+              Write-Host "SQL probe failed with SqlException number $($exception.Number), state $($exception.State), class $($exception.Class): $message"
             } else {
-              Write-Host "SQL probe failed with $($exception.GetType().Name)."
+              Write-Host "SQL probe failed with $($exception.GetType().Name): $message"
             }
           }
 
