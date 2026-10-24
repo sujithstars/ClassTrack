@@ -111,7 +111,7 @@ jobs:
             Write-Host "Configured App Service connection-string names and types (values hidden):"
             $connectionStrings | ForEach-Object { Write-Host "  $($_.name) ($($_.type))" }
             $connectionString = $connectionStrings | Where-Object { $_.name -eq "DefaultConnection" } | Select-Object -First 1
-            if ($null -eq $connectionString -or [string]::IsNullOrWhiteSpace($connectionString.connectionString)) {
+            if ($null -eq $connectionString -or [string]::IsNullOrWhiteSpace($connectionString.value)) {
               $identityJson = az webapp identity show --name "classtrack-api-sujith" --resource-group $resourceGroup -o json 2>$null
               $identity = if ($LASTEXITCODE -eq 0 -and $identityJson) { $identityJson | ConvertFrom-Json } else { $null }
               $sqlServersJson = az sql server list --query "[].{name:name,resourceGroup:resourceGroup}" -o json 2>$null
