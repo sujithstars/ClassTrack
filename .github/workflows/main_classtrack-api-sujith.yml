@@ -177,6 +177,52 @@ jobs:
           slot-name: 'Production'
           package: .
 
+      - name: Probe configured Azure SQL connection
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $settingsJson = az webapp config appsettings list --name "classtrack-api-sujith" --resource-group $env:resourceGroup -o json
+          $settings = $settingsJson | ConvertFrom-Json
+          $connectionStringSetting = $settings | Where-Object { $_.name -eq "ConnectionStrings__DefaultConnection" } | Select-Object -First 1
+          $connectionString = if ($connectionStringSetting) { $connectionStringSetting.value } else { $null }
+          if ([string]::IsNullOrWhiteSpace($connectionString)) {
+            $connectionStringsJson = az webapp config connection-string list --name "classtrack-api-sujith" --resource-group $env:resourceGroup -o json
+            $connectionStrings = $connectionStringsJson | ConvertFrom-Json
+            $connectionString = ($connectionStrings | Where-Object { $_.name -eq "DefaultConnection" } | Select-Object -First 1).value
+          }
+          if ([string]::IsNullOrWhiteSpace($connectionString)) {
+            Write-Host "SQL probe unavailable: no DefaultConnection value was found."
+            exit 0
+          }
+
+          Write-Output "::add-mask::$connectionString"
+          try {
+            Add-Type -Path (Join-Path $PWD "Microsoft.Data.SqlClient.dll")
+            $builder = [Microsoft.Data.SqlClient.SqlConnectionStringBuilder]::new($connectionString)
+            $builder.ConnectTimeout = 10
+            $connection = [Microsoft.Data.SqlClient.SqlConnection]::new($builder.ConnectionString)
+            $connection.Open()
+            $command = $connection.CreateCommand()
+            $command.CommandText = "SELECT CONVERT(bit, CASE WHEN OBJECT_ID(N'dbo.Users', N'U') IS NOT NULL THEN 1 ELSE 0 END), CONVERT(bit, CASE WHEN OBJECT_ID(N'dbo.__EFMigrationsHistory', N'U') IS NOT NULL THEN 1 ELSE 0 END)"
+            $reader = $command.ExecuteReader()
+            if ($reader.Read()) {
+              Write-Host "SQL probe succeeded. Users table exists: $($reader.GetBoolean(0)); EF migration history exists: $($reader.GetBoolean(1))."
+            }
+            $reader.Dispose()
+            $command.Dispose()
+            $connection.Dispose()
+          } catch {
+            $exception = $_.Exception
+            while ($exception.InnerException) {
+              $exception = $exception.InnerException
+            }
+            if ($exception.GetType().FullName -eq "Microsoft.Data.SqlClient.SqlException") {
+              Write-Host "SQL probe failed with SqlException number $($exception.Number), state $($exception.State), class $($exception.Class)."
+            } else {
+              Write-Host "SQL probe failed with $($exception.GetType().Name)."
+            }
+          }
+
       - name: Verify deployed app and database connectivity
         shell: pwsh
         run: |
