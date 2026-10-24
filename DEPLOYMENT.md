@@ -8,7 +8,7 @@ Configure these in the Web App's **Environment variables** before deploying:
 
 | Setting | Required value |
 | --- | --- |
-| `ConnectionStrings__DefaultConnection` | Connection string for the intended Azure SQL database |
+| `ConnectionStrings__DefaultConnection` or a `DefaultConnection` entry under **Connection strings** | Connection string for the intended Azure SQL database |
 | `Jwt__Key` | A newly generated, private signing key containing at least 32 bytes |
 | `Jwt__Issuer` | `ClassTrack.API` |
 | `Jwt__Audience` | `ClassTrack.Angular` |

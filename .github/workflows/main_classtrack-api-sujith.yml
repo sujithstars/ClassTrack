@@ -92,12 +92,26 @@ jobs:
             throw "Unable to read the Azure Web App settings."
           }
           $settings = $settingsJson | ConvertFrom-Json
-          foreach ($name in @("ConnectionStrings__DefaultConnection", "Jwt__Key", "Jwt__Issuer", "Jwt__Audience")) {
+          foreach ($name in @("Jwt__Key", "Jwt__Issuer", "Jwt__Audience")) {
             $setting = $settings | Where-Object { $_.name -eq $name } | Select-Object -First 1
             if ($null -eq $setting -or [string]::IsNullOrWhiteSpace($setting.value)) {
               throw "Required Azure Web App setting is missing: $name"
             }
           }
+
+          $connectionStringSetting = $settings | Where-Object { $_.name -eq "ConnectionStrings__DefaultConnection" } | Select-Object -First 1
+          if ($null -eq $connectionStringSetting -or [string]::IsNullOrWhiteSpace($connectionStringSetting.value)) {
+            $connectionStringsJson = az webapp config connection-string list --name "classtrack-api-sujith" --resource-group $resourceGroup -o json
+            if ($LASTEXITCODE -ne 0) {
+              throw "Unable to read Azure Web App connection-string names."
+            }
+            $connectionStrings = $connectionStringsJson | ConvertFrom-Json
+            $connectionString = $connectionStrings | Where-Object { $_.name -eq "DefaultConnection" } | Select-Object -First 1
+            if ($null -eq $connectionString -or [string]::IsNullOrWhiteSpace($connectionString.connectionString)) {
+              throw "Azure SQL connection is missing: configure ConnectionStrings__DefaultConnection as an App setting or add a DefaultConnection SQLAzure connection string."
+            }
+          }
+
           $jwtKey = ($settings | Where-Object { $_.name -eq "Jwt__Key" } | Select-Object -First 1).value
           if ([Text.Encoding]::UTF8.GetByteCount($jwtKey) -lt 32) {
             throw "Jwt__Key must contain at least 32 bytes."
