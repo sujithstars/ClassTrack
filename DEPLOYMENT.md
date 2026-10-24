@@ -12,12 +12,12 @@ Configure these in the Web App's **Environment variables** before deploying:
 | `Jwt__Key` | A newly generated, private signing key containing at least 32 bytes |
 | `Jwt__Issuer` | `ClassTrack.API` |
 | `Jwt__Audience` | `ClassTrack.Angular` |
-| `Database__ApplyMigrations` | Set to `true` for the first deployment against the intended database; after migrations complete, set to `false` |
+| `Database__ApplyMigrations` | Keep `false` in App Service; do not run schema migrations automatically during app startup |
 | `BootstrapAdmin__Username` and `BootstrapAdmin__Password` | Optional one-time initial admin credentials; remove both settings after the first successful startup |
 
 Use a fresh private signing key in App Service settings; never reuse a development key or put production keys or database credentials in source control.
 
-Only enable migrations after confirming the connection string points to the intended database and taking an appropriate backup. The application applies EF Core migrations at startup only while `Database__ApplyMigrations` is `true`.
+Apply EF Core migrations to the confirmed target database as a separate, controlled database deployment after taking an appropriate backup. Do not run migrations during App Service startup; a database connectivity or migration failure can prevent the web app from starting.
 
 For a new database with no login users, set both bootstrap settings to create the first `Admin` account with an ASP.NET Core password hash. The bootstrap runs only when the users table is empty. Remove the temporary settings after verifying the first login; never store bootstrap credentials in GitHub source.
 

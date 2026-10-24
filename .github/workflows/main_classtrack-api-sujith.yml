@@ -151,10 +151,10 @@ jobs:
           az webapp config appsettings set `
             --name "classtrack-api-sujith" `
             --resource-group $resourceGroup `
-            --settings "Database__ApplyMigrations=true" `
+            --settings "Database__ApplyMigrations=false" `
             --output none
           if ($LASTEXITCODE -ne 0) {
-            throw "Unable to enable EF Core migrations for the deployment."
+            throw "Unable to disable automatic startup migrations."
           }
 
       - name: Deploy to Azure Web App
